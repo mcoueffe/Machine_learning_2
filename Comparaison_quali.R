@@ -75,10 +75,48 @@ for(ii in 1:nb){
   cv.results <- xgb.cv(params = params, data = dtrain,nfold = 10,nrounds = 100,early_stopping_rounds = 10)
   best_nround = cv.results$best_iteration
   final_model <- xgb.train(data = dtrain, nrounds = best_nround)
-  RES[blocs==ii,"xgboost"] <- predict(final_model,dtest,type=response)
+  RES[blocs==ii,"xgboost"] <- predict(final_model,dtest,type="response")
 }
 
-RES[1:4,]
-erreur <- function(X,Y){mean((X-Y)^2)}
-round(apply(RES,2,erreur,Y=RES[,1]),2)
+
+# ********* Analyse des résultats
+library(pROC)
+
+rocglm <- roc(RES$Y, RES$glob)
+plot(rocglm)
+
+rocglm <- roc(Y ~ glob, RES)
+plot(rocglm)
+coords(rocglm) # spécificité et sensibilité en fonction des seuils
+
+coords(rocglm, x = 0.5)
+coords(rocglm, x = 0.5, ret = c("threshold","tn")) # true negatives
+coords(rocglm, x = 0.5, ret = c("threshold","accuracy", "sensitivity", "specifity"))
+coords(rocglm, x = "best")
+
+roctout <- roc(Y ~ ., RES)
+sapply(roctout, coords, x=0.5, ret = c("threshold","accuracy", "sensitivity", "specifity"))
+sapply(roctout, coords, x="best", ret = c("threshold","accuracy", "sensitivity", "specifity"))
+
+
+###choix du seuil "naturel" celui qui conserve
+###la proportion de à/1 initiale
+n0 = sum(don$Y==0)
+n0
+seuilnat <- seq(2:ncol(RES))*0
+for(ii in 1:length(seuilnat)){
+  seuilnat[ii] <- mean(sort(RES[,ii+1])[n0:(n0+1)])
+}
+seuilnat
+#### on calcule maintenant pour chaque seuil les accuracy...
+res <- NULL
+for(ii in 1:length(seuilnat)){
+  tmp =coords(roctout[[ii]],x=seuilnat[ii],
+              ret=c("threshold","accuracy","sensitivity","specificity"))
+  res = rbind(res,tmp)
+}
+rownames(res) <- colnames(RES)[-1]
+res
+res$med <- res$sensitivity+res$specificity
+res
 
