@@ -63,6 +63,13 @@ for(ii in 1:nb){
   RES[blocs==ii,"boosting"] <- predict(tmp,donT)
   tmp.opt <- gbm(Y~.,data=donA, distribution = "gaussian", n.trees = best.iter, n.minobsinnode = 5)
   RES[blocs==ii,"boosting_2etapes"] <- predict(tmp.opt,donT)
+  ###xgboost
+  dtrain <- xgb.DMatrix(data = XXA, label = YYA)
+  dtest <- xgb.DMatrix(data = XXT)
+  cv.results <- xgb.cv(data = dtrain,nfold = 10,nrounds = 100,early_stopping_rounds = 10, max_depth = 1, eta = 0.1)
+  best_nround = cv.results$best_iteration
+  final_model <- xgb.train(data = dtrain, nrounds = best_nround)
+  RES[blocs==ii,"xgboost"] <- predict(final_model,dtest)
 }
 
 RES[1:4,]
