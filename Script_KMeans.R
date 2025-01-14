@@ -25,3 +25,23 @@ for (i in 1:30){
   tmp_within[i] <- km$tot.withinss
 }
 plot(tmp_within)
+
+# ------------------------------------------ CAH
+
+cah <- hclust(dist(don, method = "euclidian"), method="ward.D")
+plot(as.dendrogram(cah))
+plot(sort(cah$height,dec=T)[1:50],type="h")
+gpcah <- cutree(cah, k=4)
+plot(don,col=gpcah)
+
+cah <- hclust(dist(don, method = "manhattan"), method="complete")
+plot(as.dendrogram(cah))
+plot(sort(cah$height,dec=T)[1:50],type="h")
+gpcah <- cutree(cah, k=6)
+plot(don,col=gpcah)
+
+cah <- hclust(dist(don, method = "euclidian"), method="single")
+plot(as.dendrogram(cah))
+plot(sort(cah$height,dec=T)[1:50],type="h")
+gpcah <- cutree(cah, k=20)
+plot(don,col=gpcah)
