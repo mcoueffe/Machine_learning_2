@@ -99,3 +99,4 @@ names(res.pca$ind)
 plot(res.pca,choix="ind",habillage=13,cex=.7)
 
 res.pca$var$contrib
+  
